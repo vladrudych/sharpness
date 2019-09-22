@@ -119,7 +119,7 @@ namespace Sharpness.Publish
             }
         }
 
-        public void PublishDirectory(string localDirectory, string remoteDirectory, bool removeRemoteFiles = true)
+        public bool PublishDirectory(string localDirectory, string remoteDirectory, bool removeRemoteFiles = true)
         {
             FileInfo zip = null;
 
@@ -235,11 +235,14 @@ namespace Sharpness.Publish
                 {
                     Console.WriteLine("Nothing to publish!");
                 }
+
+                return changed;
             }
             catch (Exception e)
             {
                 Console.WriteLine("Publish failed!");
                 Console.WriteLine(e);
+                return false;
             }
             finally
             {
@@ -248,7 +251,6 @@ namespace Sharpness.Publish
                     zip?.Delete();
                 }
             }
-
         }
 
         public void UploadFile(Stream stream, string remotePath)
