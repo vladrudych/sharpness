@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Http;
 
-namespace Ocb.Web.Codegen.Definitions
+namespace Sharpness.Codegen.Definitions
 {
     public enum ApiParameterLocation
     {

@@ -5,4 +5,8 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Sharpness.Codegen\Sharpness.Codegen.csproj" />
+    <ProjectReference Include="..\Sharpness.Build\Sharpness.Build.csproj" />
+  </ItemGroup>
 </Project>

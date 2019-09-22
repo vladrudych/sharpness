@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Routing;
-using System.Threading.Tasks;
 
-namespace Ocb.Web.Codegen.Definitions
+namespace Sharpness.Codegen.Definitions
 {
     public class ApiAction
     {
@@ -30,24 +30,24 @@ namespace Ocb.Web.Codegen.Definitions
             Parse(controllerTemplateProviders);
         }
 
-        void SetCleanReturnType(Type type)
+        public static Type GetCleanReturnType(Type type)
         {
-            if (type.IsGenericType
-                && (typeof(Task).IsAssignableFrom(type)
-                    || typeof(ActionResult).IsAssignableFrom(type)))
+            if (typeof(Task).IsAssignableFrom(type) || typeof(IActionResult).IsAssignableFrom(type))
             {
-                SetCleanReturnType(type.GenericTypeArguments[0]);
+                if (type.IsGenericType)
+                {
+                    return GetCleanReturnType(type.GenericTypeArguments[0]);
+                }
+
+                return null;
             }
-            else
-            {
-                ReturnType = type;
-            }
+
+            return type;
         }
 
         void Parse(List<IRouteTemplateProvider> controllerTemplateProviders)
         {
-
-            SetCleanReturnType(MethodInfo.ReturnType);
+            ReturnType = GetCleanReturnType(MethodInfo.ReturnType);
 
             Types.Add(ReturnType);
 

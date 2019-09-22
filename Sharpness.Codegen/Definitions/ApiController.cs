@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Routing;
 
-namespace Ocb.Web.Codegen.Definitions
+namespace Sharpness.Codegen.Definitions
 {
     public class ApiController
     {
@@ -39,11 +38,10 @@ namespace Ocb.Web.Codegen.Definitions
 
             foreach (var actionMethod in actionMethods)
             {
-                if (actionMethod.ReturnType == typeof(ActionResult)
-                    || actionMethod.ReturnType == typeof(IActionResult)
-                    || actionMethod.ReturnType == typeof(Task)
-                    || actionMethod.ReturnType == typeof(Task<IActionResult>)
-                    || actionMethod.ReturnType == typeof(Task<ActionResult>))
+                var returnType = ApiAction.GetCleanReturnType(actionMethod.ReturnType);
+
+                if (returnType == null
+                    || actionMethod.GetCustomAttribute(typeof(NonActionAttribute)) != null)
                 {
                     continue;
                 }

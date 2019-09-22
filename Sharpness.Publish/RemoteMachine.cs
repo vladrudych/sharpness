@@ -1,50 +1,14 @@
 ﻿using System;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 using Renci.SshNet;
-using Sharpness.Build;
 
 namespace Sharpness.Publish
 {
-
-    public class SshKey
-    {
-        public SshKey(byte[] data)
-            : this(new MemoryStream(data)) { }
-
-        public SshKey(byte[] data, string password)
-            : this(new MemoryStream(data), password) { }
-
-        public SshKey(Stream file)
-        {
-            KeyFile = new PrivateKeyFile(file);
-        }
-
-        public SshKey(Stream file, string password)
-        {
-            KeyFile = new PrivateKeyFile(file, password);
-        }
-
-        public SshKey(string file)
-        {
-            KeyFile = new PrivateKeyFile(file);
-        }
-
-        public SshKey(string file, string password)
-        {
-            KeyFile = new PrivateKeyFile(file, password);
-        }
-
-        internal PrivateKeyFile KeyFile { get; }
-    }
-
     public class RemoteMachine : IDisposable
     {
         readonly ConnectionInfo _connection;
@@ -252,11 +216,9 @@ namespace Sharpness.Publish
 
                     Console.WriteLine($"Copying {zip.Length / 1024d / 1024d:F3}MB to remote...");
 
-                    EnsureSftpCreated();
-
                     using (var stream = zip.OpenRead())
                     {
-                        _sftp.UploadFile(stream, $"{remoteDirectory}/{zip.Name}");
+                        UploadFile(stream, $"{remoteDirectory}/{zip.Name}");
                     }
 
                     RunSshCommand($"sudo unzip -o {remoteDirectory}/{zip.Name} -d {remoteDirectory}");
@@ -289,6 +251,13 @@ namespace Sharpness.Publish
 
         }
 
+        public void UploadFile(Stream stream, string remotePath)
+        {
+            EnsureSftpCreated();
+
+            _sftp.UploadFile(stream, remotePath);
+        }
+
         public void RestartService(string serviceName)
         {
             try
@@ -317,5 +286,4 @@ namespace Sharpness.Publish
             _sftp?.Dispose();
         }
     }
-
 }

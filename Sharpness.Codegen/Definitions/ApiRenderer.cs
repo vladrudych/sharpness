@@ -1,21 +1,24 @@
 ﻿using System.Linq;
 
-namespace Ocb.Web.Codegen.Definitions
+namespace Sharpness.Codegen.Definitions
 {
     public abstract class ApiRenderer
     {
         public string OutputDirectory { get; }
-        public string ResourcesDirectory { get; }
         public string[] ControllersToIgnore { get; set; }
 
-        protected ApiRenderer(string resourcesDirectory, string outputDirectory)
+        protected ApiRenderer(string outputDirectory)
         {
-            ResourcesDirectory = resourcesDirectory;
             OutputDirectory = outputDirectory;
         }
 
         public bool ShouldRenderController(ApiController controller)
         {
+            if(controller.Actions.Count == 0)
+            {
+                return false;
+            }
+
             string controllerName = controller.Type.Name.Replace("Controller", "");
             return ControllersToIgnore?.Contains(controllerName) != true;
         }

@@ -6,11 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.CSharp;
-using Ocb.Web.Codegen.Definitions;
+using Sharpness.Codegen.Definitions;
 
-namespace Ocb.Web.Codegen.Renderers
+namespace Sharpness.Codegen.Renderers
 {
-    class AngularApiRenderer : ApiRenderer
+    public class AngularApiRenderer : ApiRenderer
     {
         readonly CSharpCodeProvider _compiler;
         readonly List<string> _renderedModels;
@@ -19,8 +19,7 @@ namespace Ocb.Web.Codegen.Renderers
         string ModelsDirectory => Path.Combine(OutputDirectory, "models");
         string ServicesDirectory => Path.Combine(OutputDirectory, "services");
 
-        public AngularApiRenderer(string resourcesDirectory, string outputDirectory)
-            : base(resourcesDirectory, outputDirectory)
+        public AngularApiRenderer(string outputDirectory) : base(outputDirectory)
         {
             _renderedModels = new List<string>();
             _renderedControllers = new List<string>();
@@ -265,7 +264,7 @@ namespace Ocb.Web.Codegen.Renderers
                     string actionName = GetActionName(action);
                     string returnTypeName = GetTypeName(action.ReturnType);
 
-                    string actionUrl = '/' + string.Join('/', action.TemplateProviders
+                    string actionUrl = '/' + string.Join("/", action.TemplateProviders
                        .Select(p => Regex.Replace(
                            p.Template.Replace("?", ""),
                            "{(\\w+)}",
@@ -437,11 +436,18 @@ namespace Ocb.Web.Codegen.Renderers
             }
         }
 
+
         void CopyService()
         {
-            string serviceSourceFilePath = Path.Combine(ResourcesDirectory, "api.service.ts");
+            var assembly = GetType().Assembly;
             string serviceDestinationFilePath = Path.Combine(OutputDirectory, "api.service.ts");
-            File.Copy(serviceSourceFilePath, serviceDestinationFilePath, true);
+
+            using (var stream = assembly.GetManifestResourceStream("Sharpness.Codegen.Resources.TypeScript.txt"))
+            using (var reader = new StreamReader(stream))
+            {
+                string code = reader.ReadToEnd();
+                File.WriteAllText(serviceDestinationFilePath, code);
+            }
         }
     }
 }

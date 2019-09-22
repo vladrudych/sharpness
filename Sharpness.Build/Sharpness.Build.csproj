@@ -1,7 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Sharpness.Build</PackageId>
+    <PackageDescription>A set of tools to work with Dot Net application build</PackageDescription>
+    <Version>1.0.4</Version>
+    <Authors>Vlad Rudych</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/vladrudych/sharpness</RepositoryUrl>
   </PropertyGroup>
-
+  <Target Name="PublishPackage" AfterTargets="Pack" Condition="'$(Configuration)'=='Release'">
+    <Exec Command="dotnet nuget push $(OutputPath)..\$(PackageId).$(PackageVersion).nupkg -k `cat ../Secrets/nuget.key` -s https://api.nuget.org/v3/index.json" />
+  </Target>
 </Project>

@@ -1,13 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Ocb.Web.Codegen.Definitions
+namespace Sharpness.Codegen.Definitions
 {
-    public class ApiAssembly
+    public class ApiAssembly : IDisposable
     {
-        private readonly Assembly _assembly;
+        readonly Assembly _assembly;
+        readonly AssemblyResolver _assemblyResolver;
 
         public List<ApiController> Controllers { get; }
 
@@ -20,15 +22,31 @@ namespace Ocb.Web.Codegen.Definitions
             Parse();
         }
 
+        public ApiAssembly(string dllPath)
+        {
+            Controllers = new List<ApiController>();
+
+            _assemblyResolver = new AssemblyResolver(dllPath);
+
+            _assembly = _assemblyResolver.Assembly;
+
+            Parse();
+        }
+
         void Parse()
         {
             var controllerTypes = _assembly.GetExportedTypes()
-                .Where(t => t.IsSubclassOf(typeof(Controller)) && !t.IsAbstract);
+                .Where(t => t.IsSubclassOf(typeof(ControllerBase)) && !t.IsAbstract);
 
             foreach (var controllerType in controllerTypes)
             {
                 Controllers.Add(new ApiController(controllerType));
             }
+        }
+
+        public void Dispose()
+        {
+            _assemblyResolver?.Dispose();
         }
     }
 }
