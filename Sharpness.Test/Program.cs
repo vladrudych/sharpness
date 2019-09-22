@@ -27,7 +27,9 @@ namespace Sharpness.Test
         {
             Debug.Assert(BuildServices.Resolve<DirectoryService>() != null, "Unable to find DirectoryService");
             Debug.Assert(BuildServices.Resolve<GitService>() != null, "Unable to find GitService");
+            Debug.Assert(BuildServices.Resolve<GitService>().Branch == "master", "Unable to find a branch");
         }
+
 
         static void Main(string[] args)
         {

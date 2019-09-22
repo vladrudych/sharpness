@@ -6,57 +6,57 @@ namespace Sharpness.Build
     {
         readonly CommandService _command;
 
-        string _gitBranch;
-        string _gitCommit;
-        string _gitMessage;
+        string _branch;
+        string _commit;
+        string _message;
 
         public GitService(CommandService command)
         {
             _command = command;
         }
 
-        public string GitBranch
+        public string Branch
         {
             get
             {
-                if (string.IsNullOrEmpty(_gitBranch))
+                if (string.IsNullOrEmpty(_branch))
                 {
-                    _gitBranch = _command
+                    _branch = _command
                         .Read("git symbolic-ref --short HEAD")
                         .FirstOrDefault();
                 }
 
-                return _gitBranch;
+                return _branch;
             }
         }
 
-        public string GitCommit
+        public string Commit
         {
             get
             {
-                if (string.IsNullOrEmpty(_gitCommit))
+                if (string.IsNullOrEmpty(_commit))
                 {
-                    _gitCommit = _command
+                    _commit = _command
                         .Read("git rev-parse HEAD")
                         .FirstOrDefault();
                 }
 
-                return _gitCommit;
+                return _commit;
             }
         }
 
-        public string GitMessage
+        public string Message
         {
             get
             {
-                if (string.IsNullOrEmpty(_gitMessage))
+                if (string.IsNullOrEmpty(_message))
                 {
-                    _gitMessage = _command
+                    _message = _command
                         .Read("git show-branch --no-name HEAD")
                         .FirstOrDefault();
                 }
 
-                return _gitMessage;
+                return _message;
             }
         }
     }

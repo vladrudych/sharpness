@@ -90,7 +90,7 @@ namespace Sharpness.Build
 
         public List<string> Read(string command, string workingDirectory = null)
         {
-            return Run(command, workingDirectory, false);
+            return Run(command, workingDirectory, true);
         }
     }
 }
