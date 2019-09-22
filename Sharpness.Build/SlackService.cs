@@ -7,8 +7,8 @@ namespace Sharpness.Build
 {
     public class SlackService
     {
-        public string Name { get; set; } = "publish-bot";
-        public string Icon { get; set; } = "rocket";
+        public string Name { get; set; } = "pipelines-bot";
+        public string Icon { get; set; } = "robot_face";
 
         public void SendMessage(string webhookUrl, string text)
         {
