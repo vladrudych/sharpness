@@ -359,8 +359,6 @@ namespace Sharpness.Codegen.Renderers
 
                     foreach (var property in properties)
                     {
-                        Attribute.IsDefined(property, typeof(JsonProperty));
-                        
                         var jsonAttributePropertyName = ((JsonProperty)property
                                 .GetCustomAttributes(typeof(JsonProperty), false)
                                 .FirstOrDefault())
