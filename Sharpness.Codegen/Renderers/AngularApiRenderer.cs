@@ -361,16 +361,16 @@ namespace Sharpness.Codegen.Renderers
                     {
                         Attribute.IsDefined(property, typeof(JsonProperty));
                         
-                        var jsonAttributeName = ((JsonProperty)property
+                        var jsonAttributePropertyName = ((JsonProperty)property
                                 .GetCustomAttributes(typeof(JsonProperty), false)
                                 .FirstOrDefault())
                                 ?.PropertyName;
 
                         string propertyName
-                            = string.IsNullOrEmpty(jsonAttributeName)
+                            = string.IsNullOrEmpty(jsonAttributePropertyName)
                                 ? property.Name.Substring(0, 1).ToLowerInvariant()
                                     + property.Name.Substring(1)
-                                : jsonAttributeName;
+                                : jsonAttributePropertyName;
 
                         string propertyType = GetTypeName(property.PropertyType);
 
