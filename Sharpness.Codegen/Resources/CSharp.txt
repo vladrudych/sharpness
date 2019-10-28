@@ -76,7 +76,7 @@ namespace ApiServiceNamespace
 
             ApiTask<TResult> task = null;
 
-            task = new ApiTask<TResult>(service, method, url, task.ExecuteInternal);
+            task = new ApiTask<TResult>(service, method, url, () => task.ExecuteInternal());
 
             return task;
         }
