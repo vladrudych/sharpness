@@ -64,21 +64,19 @@ namespace ApiServiceNamespace
     {
         public static ApiTask<TResult> Create(ApiService service, string method, string url)
         {
-            if(service.Config == null)
+            if (service.Config == null)
             {
                 throw new Exception("Service configuration unspecified!");
             }
 
-            if(string.IsNullOrEmpty( service.Config.BaseUrl))
+            if (string.IsNullOrEmpty(service.Config.BaseUrl))
             {
                 throw new Exception("BaseUrl is not set in service configuration!");
             }
 
             ApiTask<TResult> task = null;
 
-            task = new ApiTask<TResult>(service, method, url, () => task.Execute());
-
-            task.Start();
+            task = new ApiTask<TResult>(service, method, url, task.ExecuteInternal);
 
             return task;
         }
@@ -116,7 +114,23 @@ namespace ApiServiceNamespace
 
         private void ConfigureRequest()
         {
-            Request = WebRequest.CreateHttp(Service.Config.BaseUrl + Url);
+            string url = Url;
+
+            if (QueryParams != null && QueryParams.Count > 0)
+            {
+                var queryParams = string.Join("&", QueryParams.Select(p => $"{p.Key}={p.Value}"));
+
+                if (url.Contains("?"))
+                {
+                    url = $"{url}&{queryParams}";
+                }
+                else
+                {
+                    url = $"{url}?{queryParams}";
+                }
+            }
+
+            Request = WebRequest.CreateHttp(Service.Config.BaseUrl + url);
             Serializer = new JsonSerializer();
             Request.Method = Method;
 
@@ -256,7 +270,7 @@ namespace ApiServiceNamespace
             }
         }
 
-        private TResult Execute()
+        private TResult ExecuteInternal()
         {
             ConfigureRequest();
 
@@ -358,6 +372,12 @@ namespace ApiServiceNamespace
         public ApiTask<TResult> WithEventHandler(EventHandler<ApiTaskEventArgs> handler)
         {
             Events += handler;
+            return this;
+        }
+
+        public ApiTask<TResult> Execute()
+        {
+            Start();
             return this;
         }
     }

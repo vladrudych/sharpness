@@ -125,6 +125,7 @@ namespace Sharpness.Codegen.Renderers
 						}
 					}
 
+					writer.Write($"\n                .Execute()");
 					writer.WriteLine(";");
 
 
