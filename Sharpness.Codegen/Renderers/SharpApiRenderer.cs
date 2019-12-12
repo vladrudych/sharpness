@@ -67,6 +67,39 @@ namespace Sharpness.Codegen.Renderers
 			return methodName;
 		}
 
+	    List<string> GetNamespaces(Type type)
+        {
+            var result = new List<string>();
+            var typesList = new List<Type>() { type };
+
+
+            for (int i = 0; i < typesList.Count; i++)
+            {
+                var t = typesList[i];
+
+                var ns = t.Namespace;
+                if (!result.Contains(ns))
+                {
+                    result.Add(ns);
+                }
+
+                if (t.IsGenericType)
+                {
+                    foreach (var genericArgument in t.GetGenericArguments())
+                    {
+                        if (!typesList.Contains(genericArgument))
+                        {
+                            typesList.Add(genericArgument);
+                        }
+                    }
+                }
+
+            }
+
+            return result;
+        }
+
+
 		protected override void RenderController(ApiController controller)
 		{
 			string controllerName = GetControllerName(controller);
@@ -74,13 +107,16 @@ namespace Sharpness.Codegen.Renderers
 
 			using (StreamWriter writer = new StreamWriter(filePath, false))
 			{
-				foreach (var ns in controller.Types
-					.Select(t => t.Namespace)
-					.Distinct()
-					.OrderBy(n => n))
-				{
-					writer.WriteLine($"using {ns};");
-				}
+                var namespaces = new List<string>();
+                foreach (var type in controller.Types.Distinct())
+                {
+                    namespaces.AddRange(GetNamespaces(type));
+                }
+
+                foreach (var ns in namespaces.Distinct().OrderBy(n => n))
+                {
+                    writer.WriteLine($"using {ns};");
+                }
 
 				writer.WriteLine($"");
 				writer.WriteLine($"namespace {RootNamespace}.Services");
