@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
 
 namespace Sharpness.Codegen.Definitions
 {
-    public class ApiAssembly : IDisposable
+    public class ApiAssembly
     {
         readonly Assembly _assembly;
-        readonly AssemblyResolver _assemblyResolver;
+        readonly PluginLoadContext _assemblyResolver;
 
         public List<ApiController> Controllers { get; }
 
@@ -26,9 +27,9 @@ namespace Sharpness.Codegen.Definitions
         {
             Controllers = new List<ApiController>();
 
-            _assemblyResolver = new AssemblyResolver(dllPath);
+            _assemblyResolver = new PluginLoadContext(dllPath);
 
-            _assembly = _assemblyResolver.Assembly;
+            _assembly = _assemblyResolver.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(dllPath)));
 
             Parse();
         }
@@ -42,11 +43,6 @@ namespace Sharpness.Codegen.Definitions
             {
                 Controllers.Add(new ApiController(controllerType));
             }
-        }
-
-        public void Dispose()
-        {
-            _assemblyResolver?.Dispose();
         }
     }
 }

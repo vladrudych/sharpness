@@ -13,14 +13,13 @@ namespace Sharpness.Test
             string assemblyPath = "/path/to.dll";
             string outputDirectory = "/output/directory";
 
-            using (ApiAssembly apiAssembly = new ApiAssembly(assemblyPath))
-            {
-                AngularApiRenderer angularApiRenderer = new AngularApiRenderer(outputDirectory);
+            ApiAssembly apiAssembly = new ApiAssembly(assemblyPath);
 
-                angularApiRenderer.Render(apiAssembly);
+            AngularApiRenderer angularApiRenderer = new AngularApiRenderer(outputDirectory);
 
-                Console.WriteLine("Done");
-            }
+            angularApiRenderer.Render(apiAssembly);
+
+            Console.WriteLine("Done");
         }
 
         static void TestBuild()

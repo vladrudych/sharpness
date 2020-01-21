@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.CSharp;
-using Newtonsoft.Json.Serialization;
 using Sharpness.Codegen.Definitions;
 
 namespace Sharpness.Codegen.Renderers
@@ -359,16 +358,9 @@ namespace Sharpness.Codegen.Renderers
 
                     foreach (var property in properties)
                     {
-                        var jsonAttributePropertyName = ((JsonProperty)property
-                                .GetCustomAttributes(typeof(JsonProperty), false)
-                                .FirstOrDefault())
-                                ?.PropertyName;
-
                         string propertyName
-                            = string.IsNullOrEmpty(jsonAttributePropertyName)
-                                ? property.Name.Substring(0, 1).ToLowerInvariant()
-                                    + property.Name.Substring(1)
-                                : jsonAttributePropertyName;
+                            = property.Name.Substring(0, 1).ToLowerInvariant()
+                                + property.Name.Substring(1);
 
                         string propertyType = GetTypeName(property.PropertyType);
 
