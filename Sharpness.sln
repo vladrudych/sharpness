@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sharpness.Build", "Sharpnes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sharpness.Publish", "Sharpness.Publish\Sharpness.Publish.csproj", "{47E3C5EF-DEC5-4AFA-8B60-8DB8F1312624}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sharpness.Logging.Common", "Sharpness.Logging.Common\Sharpness.Logging.Common.csproj", "{05FA201C-D3A3-48CF-9A0A-55360B202010}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sharpness.Logging.Aspnet", "Sharpness.Logging.Aspnet\Sharpness.Logging.Aspnet.csproj", "{40E6EF9A-F3A6-4A46-8D96-29DB2384C930}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,5 +35,13 @@ Global
 		{47E3C5EF-DEC5-4AFA-8B60-8DB8F1312624}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{47E3C5EF-DEC5-4AFA-8B60-8DB8F1312624}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{47E3C5EF-DEC5-4AFA-8B60-8DB8F1312624}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05FA201C-D3A3-48CF-9A0A-55360B202010}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05FA201C-D3A3-48CF-9A0A-55360B202010}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05FA201C-D3A3-48CF-9A0A-55360B202010}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05FA201C-D3A3-48CF-9A0A-55360B202010}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40E6EF9A-F3A6-4A46-8D96-29DB2384C930}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40E6EF9A-F3A6-4A46-8D96-29DB2384C930}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40E6EF9A-F3A6-4A46-8D96-29DB2384C930}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40E6EF9A-F3A6-4A46-8D96-29DB2384C930}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

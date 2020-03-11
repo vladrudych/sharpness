@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Sharpness.Logging.Common</PackageId>
+    <PackageDescription>Common classes for comfortable logs writing and storage</PackageDescription>
+    <Version>1.0.0</Version>
+    <Authors>Vlad Rudych</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/vladrudych/sharpness</RepositoryUrl>
+    <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <LangVersion>latestmajor</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <LangVersion>latestmajor</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="3.1.2" />
+  </ItemGroup>
+
+  <Target Name="PublishPackage" AfterTargets="Pack" Condition="'$(Configuration)'=='Release'">
+    <Exec Command="dotnet nuget push $(OutputPath)..\$(PackageId).$(PackageVersion).nupkg -k `cat ../Secrets/nuget.key` -s https://api.nuget.org/v3/index.json" />
+  </Target>
+
+</Project>
