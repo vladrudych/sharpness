@@ -14,7 +14,7 @@ namespace Sharpness.Codegen.Definitions
         public string Name { get; }
         public ApiParameterLocation Location { get; }
 
-        public bool IsFile => Type == typeof(IFormFile);
+        public bool IsFile => Type.FullName == typeof(IFormFile).FullName;
 
         public ApiParameter(string name, Type type, ApiParameterLocation location)
         {
