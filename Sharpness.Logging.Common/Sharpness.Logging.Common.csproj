@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Sharpness.Logging.Common</PackageId>
     <PackageDescription>Common classes for comfortable logs writing and storage</PackageDescription>
-    <Version>1.0.0</Version>
+    <Version>1.0.2</Version>
     <Authors>Vlad Rudych</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/vladrudych/sharpness</RepositoryUrl>

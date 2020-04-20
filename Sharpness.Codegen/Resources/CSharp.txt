@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -12,6 +12,8 @@ namespace ApiServiceNamespace
     public abstract class ApiService
     {
         public ApiConfig Config { get; set; }
+
+        public HttpClient HttpClient { get; set; }
     }
 
     public class ApiFile
@@ -46,13 +48,15 @@ namespace ApiServiceNamespace
 
     public abstract class ApiConfig
     {
+        public abstract HttpClient HttpClient { get; }
+
         public abstract string BaseUrl { get; }
 
-        public virtual void InterceptRequest(HttpWebRequest request) { }
+        public virtual void InterceptRequest(HttpRequestMessage request) { }
 
-        public virtual void InterceptResponse(HttpWebResponse response) { }
+        public virtual void InterceptResponse(HttpResponseMessage response) { }
 
-        public virtual void InterceptData(HttpWebRequest request, object data) { }
+        public virtual void InterceptData(HttpResponseMessage request, object data) { }
     }
 
     public enum ApiTaskState
@@ -76,17 +80,18 @@ namespace ApiServiceNamespace
 
             ApiTask<TResult> task = null;
 
-            task = new ApiTask<TResult>(service, method, url, () => task.ExecuteInternal());
+            task = new ApiTask<TResult>(service, method, url, () => task.ExecuteInternal(), service.HttpClient);
 
             return task;
         }
 
-        private ApiTask(ApiService service, string method, string url, Func<TResult> func) : base(func)
+        private ApiTask(ApiService service, string method, string url, Func<TResult> func, HttpClient httpClient = null) : base(func)
         {
             Url = url;
             Method = method;
             Service = service;
             State = ApiTaskState.Draft;
+            HttpClient = httpClient;
         }
 
         public ApiTaskState State { get; private set; }
@@ -99,8 +104,11 @@ namespace ApiServiceNamespace
         public string[] ContentType { get; private set; }
         public string[] Accept { get; private set; }
 
+        public HttpClient HttpClient { get; set; }
+
         public object Body { get; private set; }
-        public HttpWebRequest Request { get; private set; }
+
+        public HttpRequestMessage RequestMessage { get; set; }
         public JsonSerializer Serializer { get; private set; }
 
         public Dictionary<string, string> QueryParams { get; private set; }
@@ -111,6 +119,21 @@ namespace ApiServiceNamespace
 
         public event EventHandler<ApiTaskEventArgs> Events;
 
+
+        private HttpMethod GetMethod(string method)
+        {
+            switch (method)
+            {
+                case "PUT": return HttpMethod.Put;
+                case "POST": return HttpMethod.Post;
+                case "GET": return HttpMethod.Get;
+                case "DELETE": return HttpMethod.Delete;
+                case "OPTIONS": return HttpMethod.Options;
+                case "TRACE": return HttpMethod.Trace;
+            }
+
+            return null;
+        }
 
         private void ConfigureRequest()
         {
@@ -130,21 +153,36 @@ namespace ApiServiceNamespace
                 }
             }
 
-            Request = WebRequest.CreateHttp(Service.Config.BaseUrl + url);
+            if (HttpClient == null)
+            {
+                HttpClient = new HttpClient();
+            }
+
+            RequestMessage = new HttpRequestMessage(
+                GetMethod(Method),
+                Service.Config.BaseUrl + url
+            );
+
             Serializer = new JsonSerializer();
-            Request.Method = Method;
 
             if (HeaderParams != null)
             {
                 foreach (var header in HeaderParams)
                 {
-                    Request.Headers.Add(header.Key, header.Value);
+                    RequestMessage.Headers.Add(header.Key, header.Value);
                 }
             }
 
-            Request.ContentType = FindContentType(ContentType);
-            Request.Accept = FindContentType(Accept);
-            Request.CookieContainer = new CookieContainer();
+            RequestMessage.Headers.Accept
+                .Add(new MediaTypeWithQualityHeaderValue(FindContentType(Accept)));
+        }
+
+        private void ConfigureContentHeaders()
+        {
+            if (RequestMessage.Content != null && !(RequestMessage.Content is MultipartFormDataContent))
+            {
+                RequestMessage.Content.Headers.ContentType = new MediaTypeHeaderValue(FindContentType(ContentType));
+            }
         }
 
         private string FindContentType(string[] contentTypes)
@@ -161,147 +199,140 @@ namespace ApiServiceNamespace
             return Method == "PUT" || Method == "POST" || Method == "DELETE";
         }
 
-        private void WriteBody()
-        {
-            using (var stream = Request.GetRequestStream())
-            using (var writer = new StreamWriter(stream))
-            using (var json = new JsonTextWriter(writer))
-            {
-                Serializer.Serialize(json, Body);
-            }
-        }
 
-        private void WriteForm()
-        {
-            using (var stream = Request.GetRequestStream())
-            {
-                string body = string.Join("&", FormParams
-                    .Select(p => $"{p.Key}={WebUtility.UrlEncode(p.Value)}")
-                );
-                byte[] bytes = Encoding.UTF8.GetBytes(body);
-                stream.Write(bytes, 0, bytes.Length);
-            }
-        }
-
-        private void WriteMultipart()
+        private MultipartFormDataContent GetMultipart()
         {
             string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
-            byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
 
-            Request.ContentType = "multipart/form-data; boundary=" + boundary;
-            Request.KeepAlive = true;
-
-            var ms = new MemoryStream();
-
-            string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
+            var content = new MultipartFormDataContent(boundary);
 
             if (FormParams != null)
             {
                 foreach (var p in FormParams)
                 {
-                    ms.Write(boundarybytes, 0, boundarybytes.Length);
-                    string formitem = string.Format(formdataTemplate, p.Key, p.Value);
-                    byte[] formitembytes = Encoding.UTF8.GetBytes(formitem);
-                    ms.Write(formitembytes, 0, formitembytes.Length);
+                    content.Add(new StringContent(p.Value), p.Key);
                 }
             }
 
             foreach (var file in FileParams)
             {
-                ms.Write(boundarybytes, 0, boundarybytes.Length);
-
-                string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
-                string header = string.Format(headerTemplate, file.Key, file.Value.Name, file.Value.Type);
-                byte[] headerbytes = Encoding.UTF8.GetBytes(header);
-                ms.Write(headerbytes, 0, headerbytes.Length);
+                HttpContent fileContent;
 
                 if (file.Value.Stream != null)
                 {
-                    using (file.Value.Stream)
-                    {
-                        file.Value.Stream.CopyTo(ms);
-                    }
+                    fileContent = new StreamContent(file.Value.Stream);
                 }
                 else if (file.Value.Content != null)
                 {
-                    ms.Write(file.Value.Content, 0, file.Value.Content.Length);
+                    fileContent = new ByteArrayContent(file.Value.Content);
                 }
                 else
                 {
                     throw new ArgumentException("Content for ApiFile unspecified!");
                 }
+
+                fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+                {
+                    Name = file.Key,
+                    FileName = file.Value.Name
+                };
+                fileContent.Headers.Remove("Content-Type");
+                fileContent.Headers.Add("Content-Type", "application/octet-stream");
+
+                fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+                content.Add(fileContent, file.Key, file.Value.Name);
             }
 
-            byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
-            ms.Write(trailer, 0, trailer.Length);
-
-            Stream rs = Request.GetRequestStream();
-
-            byte[] buffer = new byte[1024 * 8];
-
-            int read;
-            int written = 0;
-
-            ms.Seek(0, SeekOrigin.Begin);
-
-            while ((read = ms.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                rs.Write(buffer, 0, read);
-                written += read;
-
-                Events?.Invoke(this, new ApiTaskEventArgs(written, ms.Length));
-            }
-
-            rs.Close();
+            return content;
         }
 
-        private TResult ReadResponse()
-        {
-            using (var response = Request.GetResponse())
-            {
-                Service.Config?.InterceptResponse(response as HttpWebResponse);
 
-                using (var stream = response.GetResponseStream())
-                using (var reader = new StreamReader(stream))
-                using (var json = new JsonTextReader(reader))
-                {
-                    return Serializer.Deserialize<TResult>(json);
-                }
-            }
+
+        private async Task<TResult> ReadResponse(HttpResponseMessage responseMessage)
+        {
+            using var stream = await responseMessage.Content.ReadAsStreamAsync();
+            using var reader = new StreamReader(stream);
+            using var json = new JsonTextReader(reader);
+            return Serializer.Deserialize<TResult>(json);
         }
 
         private TResult ExecuteInternal()
         {
+
             ConfigureRequest();
 
-            Service.Config?.InterceptRequest(Request);
+            Service.Config?.InterceptRequest(RequestMessage);
 
             if (MethodHasBody())
             {
                 if (Body != null)
                 {
-                    WriteBody();
+                    RequestMessage.Content = new StringContent(JsonConvert.SerializeObject(Body));
                 }
                 else
                 {
                     if (FileParams != null)
                     {
-                        WriteMultipart();
+                        RequestMessage.Content = GetMultipart();
                     }
                     else if (FormParams != null)
                     {
-                        WriteForm();
+                        RequestMessage.Content = new FormUrlEncodedContent(FormParams);
                     }
-                    else
-                    {
-                        Request.ContentLength = 0;
-                    }
+                }
+
+                if (RequestMessage.Content == null)
+                {
+                    RequestMessage.Content = new StringContent(string.Empty);
                 }
             }
 
-            var data = ReadResponse();
+            ConfigureContentHeaders();
 
-            Service.Config?.InterceptData(Request, data);
+            var responseTask = HttpClient.SendAsync(RequestMessage);
+
+            if (Events == null || !MethodHasBody())
+            {
+                responseTask.Wait();
+            }
+            else
+            {
+                // TODO: Raise REAL events
+                int currentProgress = 0;
+                int maxProress = 2000;
+                while (!responseTask.Wait(20))
+                {
+                    currentProgress += 20;
+                    if (currentProgress > maxProress)
+                    {
+                        currentProgress = maxProress;
+                    }
+                    Events.Invoke(this, new ApiTaskEventArgs(currentProgress, maxProress));
+                }
+            }
+
+            if (responseTask.Exception != null)
+            {
+                throw responseTask.Exception;
+            }
+
+            using var responseMessage = responseTask.Result;
+
+            responseMessage.EnsureSuccessStatusCode();
+
+            Service.Config.InterceptResponse(responseMessage);
+
+            var readTask = ReadResponse(responseMessage);
+            readTask.Wait();
+
+            if (readTask.Exception != null)
+            {
+                throw readTask.Exception;
+            }
+
+            var data = readTask.Result;
+
+            Service.Config.InterceptData(responseMessage, data);
 
             return data;
         }

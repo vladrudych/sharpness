@@ -4,12 +4,14 @@ namespace Sharpness.Logging.Common
 {
     public class LogEntry
     {
+        public LogEntry() { }
+
         public LogEntry(DateTime date)
         {
             Date = date.ToString("o");
         }
 
-        public string Date { get; }
+        public string Date { get; set; }
         public int Level { get; set; }
         public int EventId { get; set; }
         public string Scopes { get; set; }
