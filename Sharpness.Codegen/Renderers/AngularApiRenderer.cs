@@ -123,7 +123,7 @@ namespace Sharpness.Codegen.Renderers
 
             if (nullable)
             {
-                return name + "|null";
+                return "(" + name + "|null)";
             }
 
             return name;
