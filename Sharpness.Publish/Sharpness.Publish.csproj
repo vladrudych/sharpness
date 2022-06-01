@@ -11,7 +11,7 @@
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="SSH.NET" Version="2016.0.0" />
+    <PackageReference Include="SSH.NET" Version="2020.0.2" />
   </ItemGroup>
   <Target Name="PublishPackage" AfterTargets="Pack" Condition="'$(Configuration)'=='Release'">
     <Exec Command="dotnet nuget push $(OutputPath)..\$(PackageId).$(PackageVersion).nupkg -k `cat ../Secrets/nuget.key` -s https://api.nuget.org/v3/index.json" />
